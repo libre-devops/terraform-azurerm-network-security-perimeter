@@ -67,8 +67,9 @@ module "log_analytics" {
   }
 }
 
-# Complete call: a perimeter with inbound and outbound rules, with a workspace associated in Learning
-# mode (observe, do not block) so onboarding is non-breaking.
+# Complete call: a perimeter with inbound and outbound rules, with a workspace associated in Enforced
+# mode (the perimeter actively gates the resource's public endpoints). Onboard in Learning first, then
+# move to Enforced once the access rules are validated.
 module "nsp" {
   source = "../../"
 
@@ -93,7 +94,7 @@ module "nsp" {
           associations = {
             "law" = {
               resource_id = module.log_analytics.workspace_ids[local.law_assoc_name]
-              access_mode = "Learning"
+              access_mode = "Enforced"
             }
           }
         }

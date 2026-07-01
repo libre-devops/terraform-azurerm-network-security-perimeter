@@ -70,7 +70,7 @@ module "nsp" {
 - [`examples/minimal`](./examples/minimal) - a single perimeter with one profile and an inbound access
   rule.
 - [`examples/complete`](./examples/complete) - a perimeter with inbound and outbound rules, a Log
-  Analytics workspace associated (Learning mode), and perimeter logs shipped to another workspace via
+  Analytics workspace associated in Enforced mode, and perimeter logs shipped to another workspace via
   the `diagnostic-settings` module.
 
 ## Developing
