@@ -23,12 +23,4 @@
 #       This module only deploys the resource group. Network rules and private networking are
 #       configured by the consuming stack; use the Libre DevOps private-endpoint module for PEs.
 
-misconfigurations:
-  - id: AVD-AZU-0016
-    paths:
-      - "examples/complete/main.tf"
-    statement: >-
-      The Key Vault in the complete example is a disposable target used to demonstrate a perimeter
-      association. Purge protection is intentionally left off so the self-test can tear it down (purge
-      protection blocks deletion for the soft-delete retention period). Real vaults are created by the
-      Libre DevOps key-vault module, which enables purge protection.
+misconfigurations: []

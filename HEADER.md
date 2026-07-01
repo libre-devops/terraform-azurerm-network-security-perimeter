@@ -69,9 +69,9 @@ module "nsp" {
 
 - [`examples/minimal`](./examples/minimal) - a single perimeter with one profile and an inbound access
   rule.
-- [`examples/complete`](./examples/complete) - a perimeter with inbound and outbound rules, a Key Vault
-  association (Learning mode), and perimeter logs shipped to a Log Analytics workspace via the
-  `diagnostic-settings` module.
+- [`examples/complete`](./examples/complete) - a perimeter with inbound and outbound rules, a Log
+  Analytics workspace associated (Learning mode), and perimeter logs shipped to another workspace via
+  the `diagnostic-settings` module.
 
 ## Developing
 
@@ -99,7 +99,7 @@ below so the reason is auditable.
 
 | Trivy ID | Resource | Finding | Justification |
 |----------|----------|---------|---------------|
-| AVD-AZU-0016 | Example Key Vault (`examples/complete/main.tf`) | Purge protection not enabled | The example vault is a disposable perimeter-association target; purge protection is left off so the self-test can tear it down. Real vaults use the Libre DevOps key-vault module (purge protection on). |
+| _None_   |          |         |               |
 
 To add an exception: add an entry to `.trivyignore.yaml` (`id`, optional `paths` to scope it, and a
 `statement` recording why), then add a matching row here. Where the finding is out of this module's

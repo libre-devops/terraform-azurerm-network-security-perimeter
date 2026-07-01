@@ -1,12 +1,10 @@
 locals {
-  location = lookup(var.regions, var.loc, "uksouth")
-  rg_name  = "rg-${var.short}-${var.loc}-${terraform.workspace}-002"
-  nsp_name = "nsp-${var.short}-${var.loc}-${terraform.workspace}-002"
-  law_name = "log-${var.short}-${var.loc}-${terraform.workspace}-002"
-  kv_name  = "kv-${var.short}-${var.loc}-${terraform.workspace}-002"
+  location       = lookup(var.regions, var.loc, "uksouth")
+  rg_name        = "rg-${var.short}-${var.loc}-${terraform.workspace}-002"
+  nsp_name       = "nsp-${var.short}-${var.loc}-${terraform.workspace}-002"
+  law_logs_name  = "log-${var.short}-${var.loc}-${terraform.workspace}-002"
+  law_assoc_name = "log-${var.short}-${var.loc}-${terraform.workspace}-003"
 }
-
-data "azurerm_client_config" "current" {}
 
 module "tags" {
   source  = "libre-devops/tags/azurerm"
@@ -27,7 +25,8 @@ module "rg" {
   resource_groups = [{ name = local.rg_name, location = local.location, tags = module.tags.tags }]
 }
 
-# Workspace to receive the perimeter logs.
+# Two workspaces: one receives the perimeter logs, the other is the PaaS resource brought inside the
+# perimeter (Log Analytics is a perimeter-supported resource, per the provider docs).
 module "log_analytics" {
   source  = "libre-devops/log-analytics-workspace/azurerm"
   version = "~> 4.0"
@@ -36,27 +35,13 @@ module "log_analytics" {
   location          = local.location
   tags              = module.tags.tags
 
-  log_analytics_workspaces = { (local.law_name) = {} }
-}
-
-# A PaaS resource to bring inside the perimeter.
-resource "azurerm_key_vault" "this" {
-  name                = local.kv_name
-  location            = local.location
-  resource_group_name = module.rg.names[local.rg_name]
-  tenant_id           = data.azurerm_client_config.current.tenant_id
-  sku_name            = "standard"
-  tags                = module.tags.tags
-
-  # Deny by default (Azure services may bypass); purge protection off so this example vault is
-  # destroyable (see the Trivy waiver for AZU-0016).
-  network_acls {
-    default_action = "Deny"
-    bypass         = "AzureServices"
+  log_analytics_workspaces = {
+    (local.law_logs_name)  = {}
+    (local.law_assoc_name) = {}
   }
 }
 
-# Complete call: a perimeter with inbound and outbound rules, and the Key Vault associated in Learning
+# Complete call: a perimeter with inbound and outbound rules, with a workspace associated in Learning
 # mode (observe, do not block) so onboarding is non-breaking.
 module "nsp" {
   source = "../../"
@@ -80,8 +65,8 @@ module "nsp" {
             }
           }
           associations = {
-            "kv" = {
-              resource_id = azurerm_key_vault.this.id
+            "law" = {
+              resource_id = module.log_analytics.workspace_ids[local.law_assoc_name]
               access_mode = "Learning"
             }
           }
@@ -91,13 +76,13 @@ module "nsp" {
   }
 }
 
-# Ship the perimeter's access logs to the workspace via the diagnostic-settings module. Metrics are
-# disabled because the perimeter exposes logs, not metrics.
+# Ship the perimeter's access logs to the logs workspace via the diagnostic-settings module. Metrics
+# are disabled because the perimeter exposes logs, not metrics.
 module "diagnostics" {
   source  = "libre-devops/diagnostic-settings/azurerm"
   version = "~> 4.0"
 
-  log_analytics_workspace_id = module.log_analytics.workspace_ids[local.law_name]
+  log_analytics_workspace_id = module.log_analytics.workspace_ids[local.law_logs_name]
 
   diagnostic_settings = {
     "nsp" = {
