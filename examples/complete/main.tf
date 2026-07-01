@@ -36,8 +36,11 @@ module "log_analytics" {
   tags              = module.tags.tags
 
   log_analytics_workspaces = {
-    (local.law_logs_name)  = {}
-    (local.law_assoc_name) = {}
+    (local.law_logs_name) = {}
+    # The workspace brought inside the perimeter has a system-assigned identity: Azure warns
+    # (MissingIdentityConfiguration) that intra-perimeter communication is only authenticated via a
+    # managed identity, so associated resources should have one.
+    (local.law_assoc_name) = { identity = { type = "SystemAssigned" } }
   }
 }
 

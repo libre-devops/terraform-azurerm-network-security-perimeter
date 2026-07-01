@@ -13,7 +13,9 @@ variable "network_security_perimeters" {
 
     associations: bring a PaaS resource (by resource_id) inside the perimeter. access_mode defaults to
     Learning (observe, do not block) for safe onboarding; set Enforced once your access rules are
-    validated, or Audit to log denials without blocking.
+    validated, or Audit to log denials without blocking. Give the associated resource a managed
+    identity: intra-perimeter communication is only authenticated via managed identity, so Azure warns
+    (MissingIdentityConfiguration) on associated resources that do not have one.
   EOT
   type = map(object({
     profiles = optional(map(object({
